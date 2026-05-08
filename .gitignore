@@ -135,3 +135,18 @@ credentials/
 .env.local
 .env.*.local
 *.env.local
+
+# =============================================================================
+# SPRING BOOT CONFIG - NEVER COMMIT
+# =============================================================================
+**/application.yml
+**/application.properties
+**/application-*.yml
+!**/application-example.yml
+
+# =============================================================================
+# SPRING SECURITY & SECRETS
+# =============================================================================
+**/secrets.properties
+**/keystore.jks
+**/application-secret.yml

@@ -1,144 +1,181 @@
-# DevArena - The New Way to Learn Programming
+# DevArena
 
-<div align="center">
+A gamified programming learning platform that combines elements from Duolingo, LeetCode, Discord, and RPGs.
 
-![DevArena Logo](https://via.placeholder.com/150x150/devarena?text=DevArena)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/lkznx7/devarena)](https://github.com/lkznx7/devarena/stargazers)
-[![GitHub Forks](https://img.shields.io/github/forks/lkznx7/devarena)](https://github.com/lkznx7/devarena/network)
-[![Contributors](https://img.shields.io/github/contributors/lkznx7/devarena)](https://github.com/lkznx7/devarena/contributors)
+## Overview
 
-**A gamified learning platform for programmers. The perfect mix of Duolingo + LeetCode + Discord + RPG.**
+DevArena is an innovative platform designed to make programming education engaging, fun, and effective. Users can compete in real-time coding battles, solve progressive challenges, earn XP, level up, and track their progress through a comprehensive gamification system.
 
-</div>
-
----
-
-## 🎮 What is DevArena?
-
-DevArena is an innovative gamified learning platform designed to make programming education engaging, fun, and effective. It combines the best elements from successful platforms:
-
-- **Duolingo** - Gamified learning with streaks, rewards, and progression
-- **LeetCode** - Technical challenges and coding exercises
-- **Discord** - Community interaction and social features
-- **RPG** - Character progression, levels, and achievements
-
-### ✨ Key Features
-
-- 🏆 **Ranked PvP Arena** - Compete against other developers in real-time coding battles
-- 📚 **Structured Challenges** - Progressive difficulty levels from beginner to expert
-- 🤖 **AI Mentor** - Intelligent guidance powered by Groq API
-- 🎯 **Missions & Quests** - Daily and weekly challenges to keep you motivated
-- 🏅 **XP & Leveling System** - Earn experience points and unlock new abilities
-- 💬 **Real-time Notifications** - WebSocket-powered instant updates
-- 👥 **Social Features** - Friends, clans, and community discussions
-
----
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
-- **Next.js 15** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **TailwindCSS** - Utility-first CSS framework
-- **Shadcn/UI** - Modern UI components
-- **Framer Motion** - Smooth animations
-- **Zustand** - Lightweight state management
-- **TanStack Query** - Server state management
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Next.js | 15 | React framework with App Router |
+| TypeScript | 5 | Type-safe development |
+| TailwindCSS | 4 | Utility-first CSS |
+| Zustand | - | Client state management |
+| TanStack Query | 5 | Server state management |
+| shadcn/ui | - | UI components (Radix) |
+| Framer Motion | - | Animations |
 
 ### Backend
-- **Java 21** - Latest LTS Java version
-- **Spring Boot 3.3** - Modern Java framework
-- **Spring Security** - Robust authentication/authorization
-- **JWT** - Secure token-based auth
-- **WebSocket** - Real-time communication
-- **PostgreSQL** - Primary database
-- **Redis** - Caching and session management
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Java | 21 | Programming language |
+| Spring Boot | 3.4 | Application framework |
+| Spring Security | 6.x | Authentication/Authorization |
+| JWT | 0.12.6 | Stateless auth |
+| WebSocket | STOMP | Real-time communication |
+| PostgreSQL | 16 | Primary database |
+| Redis | 7 | Cache & sessions |
 
 ### Infrastructure
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container orchestration
-- **Nginx** - Reverse proxy and load balancing
+| Technology | Purpose |
+|------------|---------|
+| Docker | Containerization |
+| Docker Compose | Orchestration |
+| Nginx | Reverse proxy |
+| Kubernetes | Orchestration (ready) |
 
 ### External APIs
-- **Piston API** - Code execution engine
-- **Groq API** - AI-powered code assistance
+| API | Purpose |
+|-----|---------|
+| Piston | Code execution engine |
+| Groq | AI-powered assistance |
 
----
+## Architecture
 
-## 📁 Project Structure
+```
+Client -> Nginx -> Backend (Spring Boot)
+                   |
+             +-----+-----+
+             |           |
+          PostgreSQL    Redis
+```
+
+## Modules
+
+### Backend Modules
+| Module | Description |
+|--------|-------------|
+| Auth | JWT + OAuth2 authentication |
+| User | Profile, stats, XP, streak, follow |
+| Challenge | Topics, challenges, hints, test cases |
+| Submission | Code execution via Piston API |
+| Mission | Daily/weekly missions |
+| Badge | Achievements system |
+| Ranking | Leaderboards |
+| PvP | Real-time battles with WebSocket |
+| Notification | Real-time notifications |
+| AI | Groq-powered hints and code review |
+
+### Frontend Pages
+| Route | Description |
+|-------|-------------|
+| /public | Landing page |
+| /auth/login | Login page |
+| /auth/register | Registration page |
+| /dashboard | Main dashboard |
+| /dashboard/profile | User profile |
+| /dashboard/settings | Settings |
+| /dashboard/chat | Chat interface |
+| /dashboard/users | User management |
+
+## Project Structure
 
 ```
 devarena/
-├── frontend/          # Next.js application
-├── backend/          # Spring Boot application
-├── docker/           # Docker configurations
-└── docs/             # Documentation
+├── frontend/              # Next.js application
+├── backend/               # Spring Boot application
+│   └── DevArenaBackend/
+│       └── src/main/java/com/devarena/
+│           ├── config/
+│           ├── controller/
+│           ├── dto/
+│           ├── entity/
+│           ├── exception/
+│           ├── repository/
+│           ├── service/
+│           └── security/
+├── docker/                # Docker configurations
+├── infra/                 # Kubernetes manifests
+├── docs/                  # Original documentation
+├── docs-enterprise/       # Enterprise documentation
+└── .github/               # CI/CD workflows
 ```
 
----
-
-## 🚀 Quick Start
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+
 - Java 21
-- Docker & Docker Compose
-- PostgreSQL 15+
-- Redis 7+
+- Docker 24+
+- Docker Compose v2
 
-### Local Development
+### Quick Start
 
 ```bash
 # Clone the repository
 git clone https://github.com/lkznx7/devarena.git
 cd devarena
 
-# Start with Docker Compose
-docker-compose up -d
+# Copy environment variables
+cp .env.example .env
 
-# Or run individually:
-# Backend: cd backend && ./mvnw spring-boot:run
-# Frontend: cd frontend && npm run dev
+# Start all services
+docker-compose up -d
 ```
 
----
+### Manual Setup
 
-## 📚 Documentation
+**Backend:**
+```bash
+cd backend/DevArenaBackend
+./mvnw clean install
+./mvnw spring-boot:run
+```
 
-- [Architecture Overview](./docs/architecture.md)
-- [API Documentation](./docs/api/README.md)
-- [Contributing Guide](./CONTRIBUTING.md)
-- [Code of Conduct](./CODE_OF_CONDUCT.md)
+**Frontend:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
----
+### Services
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| API | http://localhost:8080 |
+| Swagger UI | http://localhost:8080/swagger-ui.html |
+| OpenAPI JSON | http://localhost:8080/api-docs |
 
-## 🤝 Contributing
+## Documentation
 
-We welcome contributions! Please read our [contributing guidelines](CONTRIBUTING.md) before getting started.
+Enterprise-level documentation available in `docs-enterprise/`:
+
+- `architecture/` - System architecture
+- `backend/` - Backend implementation
+- `frontend/` - Frontend implementation
+- `devops/` - Infrastructure & deployment
+- `product/` - Product specifications
+- `engineering/` - Engineering standards
+- `onboarding/` - Developer onboarding
+
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch (`feature/description`)
+3. Make your changes
+4. Submit a Pull Request
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+## License
+
+MIT License - See [LICENSE](LICENSE) file for details.
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🌟 Show Your Support
-
-Give a ⭐️ if this project helped you!
-
----
-
-<div align="center">
-
-**Built with ❤️ by developers, for developers**
-
-</div>
+Built with passion for developers, by developers.
