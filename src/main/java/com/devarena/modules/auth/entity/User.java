@@ -1,5 +1,6 @@
 package com.devarena.modules.auth.entity;
 
+import com.devarena.modules.auth.enums.Roles;
 import com.devarena.modules.badge.entity.UserBadge;
 import com.devarena.modules.challenge.entity.UserChallengeProgress;
 import com.devarena.modules.gamification.entity.UserMission;
@@ -13,9 +14,12 @@ import com.devarena.modules.user.entity.UserStats;
 import com.devarena.modules.user.entity.XpTransaction;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "users")
@@ -23,7 +27,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -37,7 +41,8 @@ public class User {
     private Integer xp;
     private Integer level;
     private String plan;
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Roles role;
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -89,4 +94,250 @@ public class User {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<UserChallengeProgress> challengeProgress;
+
+    // metodos userdetails
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (this.role == null) {
+            return Collections.emptySet();
+        }
+        return Set.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public Integer getXp() {
+        return xp;
+    }
+
+    public void setXp(Integer xp) {
+        this.xp = xp;
+    }
+
+    public Integer getLevel() {
+        return level;
+    }
+
+    public void setLevel(Integer level) {
+        this.level = level;
+    }
+
+    public String getPlan() {
+        return plan;
+    }
+
+    public void setPlan(String plan) {
+        this.plan = plan;
+    }
+
+    public Roles getRole() {
+        return role;
+    }
+
+    public void setRole(Roles role) {
+        this.role = role;
+    }
+
+    public Boolean getActive() {
+        return isActive;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public List<RefreshToken> getRefreshTokens() {
+        return refreshTokens;
+    }
+
+    public void setRefreshTokens(List<RefreshToken> refreshTokens) {
+        this.refreshTokens = refreshTokens;
+    }
+
+    public List<OAuthAccount> getOauthAccounts() {
+        return oauthAccounts;
+    }
+
+    public void setOauthAccounts(List<OAuthAccount> oauthAccounts) {
+        this.oauthAccounts = oauthAccounts;
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<Notification> notifications) {
+        this.notifications = notifications;
+    }
+
+    public List<UserMission> getUserMissions() {
+        return userMissions;
+    }
+
+    public void setUserMissions(List<UserMission> userMissions) {
+        this.userMissions = userMissions;
+    }
+
+    public List<Ranking> getRankings() {
+        return rankings;
+    }
+
+    public void setRankings(List<Ranking> rankings) {
+        this.rankings = rankings;
+    }
+
+    public List<Follow> getFollowing() {
+        return following;
+    }
+
+    public void setFollowing(List<Follow> following) {
+        this.following = following;
+    }
+
+    public List<Follow> getFollowers() {
+        return followers;
+    }
+
+    public void setFollowers(List<Follow> followers) {
+        this.followers = followers;
+    }
+
+    public List<XpTransaction> getXpTransactions() {
+        return xpTransactions;
+    }
+
+    public void setXpTransactions(List<XpTransaction> xpTransactions) {
+        this.xpTransactions = xpTransactions;
+    }
+
+    public UserStats getUserStats() {
+        return userStats;
+    }
+
+    public void setUserStats(UserStats userStats) {
+        this.userStats = userStats;
+    }
+
+    public List<Submission> getSubmissions() {
+        return submissions;
+    }
+
+    public void setSubmissions(List<Submission> submissions) {
+        this.submissions = submissions;
+    }
+
+    public List<PvpMatch> getPvpMatchesAsPlayer1() {
+        return pvpMatchesAsPlayer1;
+    }
+
+    public void setPvpMatchesAsPlayer1(List<PvpMatch> pvpMatchesAsPlayer1) {
+        this.pvpMatchesAsPlayer1 = pvpMatchesAsPlayer1;
+    }
+
+    public List<PvpMatch> getPvpMatchesAsPlayer2() {
+        return pvpMatchesAsPlayer2;
+    }
+
+    public void setPvpMatchesAsPlayer2(List<PvpMatch> pvpMatchesAsPlayer2) {
+        this.pvpMatchesAsPlayer2 = pvpMatchesAsPlayer2;
+    }
+
+    public List<PvpMatch> getWonMatches() {
+        return wonMatches;
+    }
+
+    public void setWonMatches(List<PvpMatch> wonMatches) {
+        this.wonMatches = wonMatches;
+    }
+
+    public List<PvpQueue> getPvpQueues() {
+        return pvpQueues;
+    }
+
+    public void setPvpQueues(List<PvpQueue> pvpQueues) {
+        this.pvpQueues = pvpQueues;
+    }
+
+    public List<UserBadge> getUserBadges() {
+        return userBadges;
+    }
+
+    public void setUserBadges(List<UserBadge> userBadges) {
+        this.userBadges = userBadges;
+    }
+
+    public List<UserChallengeProgress> getChallengeProgress() {
+        return challengeProgress;
+    }
+
+    public void setChallengeProgress(List<UserChallengeProgress> challengeProgress) {
+        this.challengeProgress = challengeProgress;
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
 }
