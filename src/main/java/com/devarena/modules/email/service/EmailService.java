@@ -22,8 +22,7 @@ public class EmailService {
         message.setFrom("noreply@email.com"); // REMETENTE
         message.setTo(email.to()); // DESTINATARIO
         message.setSubject(email.subject()); // ASSUNTO
-        message.setText(email.body()); // CORPO EMAIL , POR TOKEN PARA A VERIFICAÇÃO
-
+        message.setText(email.body()); // CORPO EMAIL , POR TOKEN PARA A VERIFICAÇÃOs
         mailSender.send(message); // DISPARA EMAIL
 
     }

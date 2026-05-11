@@ -51,8 +51,8 @@ public class AuthController {
     }
 
     @GetMapping("/verify-email")
-    public ResponseEntity<ApiResponse> verifyEmail(@RequestParam String token) {
-        authService.verifyEmail(token);
+    public ResponseEntity<ApiResponse> verifyEmail(@RequestParam String token, @RequestParam String email) {
+        authService.verifyEmail(token, email);
         return ResponseEntity
                 .ok(new ApiResponse(true, "E-mail verificado com sucesso.", null));
     }

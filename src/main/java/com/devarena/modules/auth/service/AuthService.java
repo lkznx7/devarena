@@ -17,7 +17,7 @@ public interface AuthService {
 
     void resetPassword(ResetPasswordRequest request);
 
-    void verifyEmail(String token);
+    void verifyEmail(String token, String email);
 
     UserResponse onboarding(OnboardingRequest request, String userEmail);
 }

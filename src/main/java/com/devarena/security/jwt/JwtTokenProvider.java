@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
@@ -22,12 +21,6 @@ public class JwtTokenProvider {
 
     @Value("${JWT_EXPIRATION}")
     private Long expiration;
-
-    @Value("${jwt.email-verification-expiration}")
-    private Long emailVerificationExpiration;
-
-    @Value("${jwt.reset-token-expiration}")
-    private Long resetTokenExpiration;
 
     public String generateToken(Authentication authentication) {
         UserDetails user = (UserDetails) authentication.getPrincipal();
@@ -40,14 +33,6 @@ public class JwtTokenProvider {
 
     public String generateToken(String email, String role) {
         return buildToken(email, role, expiration);
-    }
-
-    public String generateEmailVerificationToken(UUID userId) {
-        return buildToken(userId.toString(), "EMAIL_VERIFICATION", emailVerificationExpiration);
-    }
-
-    public String generatePasswordResetToken(UUID userId) {
-        return buildToken(userId.toString(), "PASSWORD_RESET", resetTokenExpiration);
     }
 
     private String buildToken(String subject, String role, Long expirationTime) {
@@ -93,14 +78,5 @@ public class JwtTokenProvider {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    public String validateEmailVerificationToken(String token) {
-        Claims claims = claims(token);
-        String role = claims.get("role", String.class);
-        if (!"EMAIL_VERIFICATION".equals(role)) {
-            throw new IllegalArgumentException("Token inválido para verificação de e-mail");
-        }
-        return claims.getSubject();
     }
 }
