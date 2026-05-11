@@ -1,6 +1,7 @@
 package com.devarena.modules.email.service;
 
 import com.devarena.modules.auth.entity.User;
+import com.devarena.modules.email.dto.Email;
 import com.devarena.modules.email.entity.TokenEmail;
 import com.devarena.modules.email.repository.TokenEmailRepository;
 import org.springframework.stereotype.Service;
@@ -11,10 +12,12 @@ import java.util.Random;
 @Service
 public class TokenEmailService {
 
-     final TokenEmailRepository tokenEmailRepository;
+    private final TokenEmailRepository tokenEmailRepository;
+    private final EmailService emailService;
 
-    public TokenEmailService(TokenEmailRepository tokenEmailRepository) {
+    public TokenEmailService(TokenEmailRepository tokenEmailRepository, EmailService emailService) {
         this.tokenEmailRepository = tokenEmailRepository;
+        this.emailService = emailService;
     }
 
     public TokenEmail CriarToken(User user) {
@@ -33,8 +36,16 @@ public class TokenEmailService {
         String tokengerado = sb.toString();
 
         TokenEmail tokenFinal = new TokenEmail(tokengerado, user.getEmail());
+        tokenEmailRepository.save(tokenFinal);
 
-        return tokenEmailRepository.save(tokenFinal);
+        Email emailDto = new Email(
+                user.getEmail(),
+                "Seu código de verificação do DevArena",
+                "Olá!\n\nSeu código de verificação é: " + tokengerado + "\n\nEle expira em 10 minutos.\n\nNão compartilhe este código com ninguém."
+        );
+        emailService.sendEmail(emailDto);
+
+        return tokenFinal;
     }
 
     public boolean validarTokenEmail(TokenEmail tokenNoBanco, String tokenDigitado, String emailDigitado) {
