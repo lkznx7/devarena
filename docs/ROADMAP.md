@@ -27,30 +27,34 @@
 - [X] Criar `OAuthAccount`
 
 ### Segurança
-- [ ] Configurar JWT
-- [ ] Criar filtro JWT
+- [X] Configurar JWT
+- [X] Criar filtro JWT
 - [X] Criar autenticação via Spring Security
 - [X] Configurar roles/permissões
 - [X] Configurar criptografia de senha (`BCrypt`)
 
-### Endpoints
-- [ ] `POST /auth/register`
-- [ ] `POST /auth/login`
+### Endpoints (estrutura)
+- [X] `POST /auth/register`
+- [X] `POST /auth/login`
+- [X] `POST /auth/forgot-password`
+- [X] `PATCH /auth/reset-password`
+- [X] `GET /auth/verify-email`
+- [X] `POST /auth/onboarding`
 - [ ] `POST /auth/refresh`
 - [ ] `POST /auth/logout`
 
-### Regras
+### Regras (lógica)
 - [ ] Validação de email único
 - [ ] Validação de senha
 - [ ] Logout invalidando refresh token
 - [ ] Sistema de refresh token funcional
 
 ### Resultado Esperado
-- [ ] Login funcionando
-- [ ] Registro funcionando
-- [ ] Refresh token funcionando
-- [ ] Logout funcionando
-- [ ] Roles funcionando
+- [X] Login funcionando (estrutura base)
+- [X] Registro funcionando (estrutura base)
+- [ ] Refresh token funcionando (lógica)
+- [ ] Logout funcionando (lógica)
+- [X] Roles funcionando
 
 ---
 
@@ -61,54 +65,51 @@
 
 ## Challenge Module
 
-### Ordem de Construção
+### Entidades (estrutura)
 - [X] Criar `Challenge`
-- [ ] Criar `ChallengeTestCase`
-- [ ] Criar `ChallengeHint`
-- [ ] Criar `Topic`
-- [ ] Criar `UserChallengeProgress`
+- [X] Criar `ChallengeTestCase`
+- [X] Criar `ChallengeHint`
+- [X] Criar `Topic`
+- [X] Criar `UserChallengeProgress`
 
-### Funcionalidades
-- [X] CRUD de desafios
+### Funcionalidades (lógica)
+- [ ] CRUD de desafios
 - [ ] CRUD de tópicos
-- [X] Sistema de dificuldade
-- [X] Sistema de tags
-- [X] Listagem paginada
-- [X] Busca de desafios
-- [X] Relacionamento desafio ↔ tópicos
+- [ ] Sistema de dificuldade
+- [ ] Sistema de tags
+- [ ] Listagem paginada
+- [ ] Busca de desafios
+- [ ] Relacionamento desafio ↔ tópicos
 
 ### Endpoints
-- [X] `GET /challenges`
-- [X] `GET /challenges/{id}`
-- [X] `POST /challenges`
-- [X] `PUT /challenges/{id}`
-- [X] `DELETE /challenges/{id}`
+- [ ] `GET /challenges`
+- [ ] `GET /challenges/{id}`
+- [ ] `POST /challenges`
+- [ ] `PUT /challenges/{id}`
+- [ ] `DELETE /challenges/{id}`
 
 ---
 
 ## Submission Module
 
-### Entidades
+### Entidades (estrutura)
 - [X] Criar `Submission`
 
-### Funcionalidades
-- [X] Salvar código enviado
-- [X] Validar submissão
+### Funcionalidades (lógica)
+- [ ] Salvar código enviado
+- [ ] Validar submissão
 - [ ] Simular execução
-- [X] Gerar status:
-   - [X] `ACCEPTED`
-   - [X] `WRONG_ANSWER`
-   - [X] `ERROR`
+- [ ] Gerar status (`ACCEPTED`, `WRONG_ANSWER`, `ERROR`)
 
 ### Endpoints
-- [X] `POST /submissions`
-- [X] `GET /submissions/{id}`
-- [X] `GET /users/{id}/submissions`
+- [ ] `POST /submissions`
+- [ ] `GET /submissions/{id}`
+- [ ] `GET /users/{id}/submissions`
 
 ### Resultado Esperado
-- [X] Resolver desafios
-- [X] Salvar progresso
-- [X] Sistema de submissões funcional
+- [ ] Resolver desafios
+- [ ] Salvar progresso
+- [ ] Sistema de submissões funcional
 
 ---
 
@@ -119,29 +120,29 @@
 
 ## XP Module
 
-### Entidades
+### Entidades (estrutura)
 - [X] Criar `XpTransaction`
 - [X] Criar `UserStats`
 
-### Funcionalidades
-- [X] Ganho de XP
-- [X] Sistema de level
-- [X] Histórico de XP
-- [X] Atualização automática de stats
+### Funcionalidades (lógica)
+- [ ] Ganho de XP
+- [ ] Sistema de level
+- [ ] Histórico de XP
+- [ ] Atualização automática de stats
 
 ### Fluxo
-- [X] Completar desafio → ganhar XP
-- [X] Atualizar stats automaticamente
+- [ ] Completar desafio → ganhar XP
+- [ ] Atualizar stats automaticamente
 
 ---
 
 ## Badge Module
 
-### Entidades
-- [ ] Criar `Badge`
-- [ ] Criar `UserBadge`
+### Entidades (estrutura)
+- [X] Criar `Badge`
+- [X] Criar `UserBadge`
 
-### Funcionalidades
+### Funcionalidades (lógica)
 - [ ] Sistema de conquistas
 - [ ] Desbloqueio automático
 - [ ] Associação usuário ↔ badge
@@ -150,21 +151,21 @@
 
 ## Mission Module
 
-### Entidades
+### Entidades (estrutura)
 - [X] Criar `Mission`
 - [X] Criar `UserMission`
 
-### Funcionalidades
-- [X] Missões diárias
-- [X] Missões semanais
-- [X] Controle de progresso
-- [X] Recompensas
+### Funcionalidades (lógica)
+- [ ] Missões diárias
+- [ ] Missões semanais
+- [ ] Controle de progresso
+- [ ] Recompensas
 
 ### Resultado Esperado
-- [X] XP funcional
-- [X] Sistema de levels
-- [X] Badges desbloqueáveis
-- [X] Missões funcionando
+- [ ] XP funcional
+- [ ] Sistema de levels
+- [ ] Badges desbloqueáveis
+- [ ] Missões funcionando
 
 ---
 
@@ -175,29 +176,29 @@
 
 ## Social Layer
 
-### Entidades
+### Entidades (estrutura)
 - [X] Criar `Follow`
-- [ ] Criar `Notification`
+- [X] Criar `Notification`
 
-### Funcionalidades
-- [X] Seguir usuários
-- [X] Deixar de seguir usuários
+### Funcionalidades (lógica)
+- [ ] Seguir usuários
+- [ ] Deixar de seguir usuários
 - [ ] Feed de notificações
 - [ ] Notificações em tempo real
 
 ### Endpoints
-- [X] `POST /follow/{id}`
-- [X] `DELETE /follow/{id}`
+- [ ] `POST /follow/{id}`
+- [ ] `DELETE /follow/{id}`
 - [ ] `GET /notifications`
 
 ---
 
 ## Ranking Module
 
-### Entidades
-- [ ] Criar `Ranking`
+### Entidades (estrutura)
+- [X] Criar `Ranking`
 
-### Funcionalidades
+### Funcionalidades (lógica)
 - [ ] Ranking global
 - [ ] Ranking semanal
 - [ ] Ranking mensal
@@ -222,29 +223,31 @@
 
 ## PvP Module
 
-### Ordem de Construção
+### Entidades (estrutura)
 - [X] Criar `PvpQueue`
 - [X] Criar `PvpMatch`
 
-### Funcionalidades
-- [X] Entrar na fila
-- [X] Matchmaking automático
-- [X] Seleção automática de desafio
-- [X] Tempo da partida
-- [X] Sistema de vencedor
-- [X] Recompensa de XP
+### Funcionalidades (lógica)
+- [ ] Entrar na fila
+- [ ] Matchmaking automático
+- [ ] Seleção automática de desafio
+- [ ] Tempo da partida
+- [ ] Sistema de vencedor
+- [ ] Recompensa de XP
 
 ### Fluxo
-- [X] Usuário entra na fila
-- [X] Matchmaking encontra oponente
-- [X] Partida inicia
-- [X] Jogadores resolvem desafio
-- [X] Sistema define vencedor
-- [X] XP é distribuído
+- [ ] Usuário entra na fila
+- [ ] Matchmaking encontra oponente
+- [ ] Partida inicia
+- [ ] Jogadores resolvem desafio
+- [ ] Sistema define vencedor
+- [ ] XP é distribuído
 
 ### Resultado Esperado
-- [X] Matchmaking funcional
-- [X] PvP funcional em tempo real
+- [ ] Matchmaking funcional
+- [ ] PvP funcional em tempo real
+- [ ] Ranking de PvP
+- [ ] Estatísticas de PvP
 
 ---
 
@@ -319,9 +322,23 @@
 
 # 🎯 Ordem Ideal de Desenvolvimento
 
-- [ ] Fase 1 → Base/Auth
+- [X] Fase 1 → Base/Auth (estrutura)
+- [ ] Fase 1 → Auth (lógica completa)
 - [ ] Fase 2 → Challenges/Submissions
 - [ ] Fase 3 → Gamificação
 - [ ] Fase 4 → Social
 - [ ] Fase 5 → PvP
 - [ ] Fase 6 → Infra/Segurança/Deploy
+
+---
+
+# 📊 Status Real do Projeto
+
+| Categoria | Feito | Total | Porcentagem |
+|-----------|-------|-------|-------------|
+| Entidades/Models | 18 | 18 | 100% |
+| Services (lógica) | 0 | ~15 | 0% |
+| Controllers | 1 | ~15 | ~7% |
+| Endpoints funcionais | 6 | ~40 | ~15% |
+
+**Resumo:** A estrutura do banco está montada (todas as entidades existem), mas a lógica de negócio está quase toda por implementar. Os `Services` estão vazios e os `Controllers` estão incompletos.

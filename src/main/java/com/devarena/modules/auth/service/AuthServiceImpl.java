@@ -7,12 +7,22 @@ import com.devarena.modules.auth.dto.request.ResetPasswordRequest;
 import com.devarena.modules.auth.dto.response.AuthResponse;
 import com.devarena.modules.auth.dto.response.UserResponse;
 import com.devarena.modules.auth.entity.User;
+import com.devarena.modules.auth.enums.Roles;
 import com.devarena.modules.auth.mapper.UserMapper;
 import com.devarena.modules.auth.repository.UserRepository;
 import com.devarena.security.jwt.JwtTokenProvider;
+import com.devarena.shared.exceptions.BusinessException;
+import com.devarena.shared.exceptions.ResourceNotFoundException;
+import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -22,85 +32,65 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailValidator emailValidator;
 
     public AuthServiceImpl(
             UserRepository userRepository,
             UserMapper userMapper,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
-            JwtTokenProvider jwtTokenProvider
-    ) {
+            JwtTokenProvider jwtTokenProvider,
+            EmailValidator emailValidator) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.emailValidator = emailValidator;
     }
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-        // TODO: PASSO A PASSO - Lógica de Negócio
-        //
-        // 1. Verificar se o e-mail já está cadastrado (userRepository.findByEmail)
-        //    - Se existir, lançar BusinessException("E-mail já cadastrado")
-        //
-        // 2. Converter RegisterRequest → User via userMapper.toUser(request)
-        //
-        // 3. Definir valores padrão:
-        //    - password = passwordEncoder.encode(request.password())  // 1 única vez
-        //    - displayName = request.email().split("@")[0]  // default temporário
-        //    - role = Roles.PLAYER
-        //    - isActive = false  // email precisa ser verificado
-        //    - level = 1
-        //    - xp = 0
-        //    - plan = "FREE"
-        //    - createdAt / updatedAt = LocalDateTime.now()
-        //
-        // 4. Gerar token de verificação de e-mail:
-        //    - String verificationToken = jwtTokenProvider.generateEmailVerificationToken(user.getId())
-        //
-        // 5. Salvar user no banco (userRepository.save)
-        //
-        // 6. Simular envio de e-mail:
-        //    - System.out.println("Simulando envio de email para: " + user.getEmail())
-        //    - System.out.println("Token de verificação: " + verificationToken)
-        //
-        // 7. Retornar AuthResponse com token JWT (opcional no registro) e userMapper.toUserResponse(user)
-        //
-        // DICA: Para o registro, você pode gerar um token shorter-lived específico para email verification,
-        //       diferente do token de autenticação. O JwtTokenProvider pode ter um método separado.
 
-        return null;
+        String email = request.email();
+
+         if (userRepository.findByEmail(email)!=null) {
+             throw new BusinessException("E-mail já cadastrado");
+         }
+         User user = userMapper.toUser(request);
+         user.setPassword(passwordEncoder.encode(request.password()));
+         user.setDisplayName(request.email().split("@")[0]);
+         user.setRole(Roles.USER);
+         user.setIsActive(false);
+         user.setLevel(1);
+         user.setXp(0);
+         user.setPlan("FREE");
+         user.setCreatedAt(LocalDateTime.now());
+         userRepository.save(user);
+        String TokenVerification = jwtTokenProvider.generateEmailVerificationToken(user.getId());
+        System.out.println("Simulando envio de email para: " + user.getEmail());
+        System.out.println("Token de verificação: " + TokenVerification);
+        String accessToken = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().name());
+        UserResponse userResponse = userMapper.toUserResponse(user);
+        //cria metodo para verificar email ,mandando codigo no email
+        return new AuthResponse(accessToken, userResponse);
     }
-
     @Override
     public AuthResponse login(String email, String password) {
-        // TODO: PASSO A PASSO - Lógica de Negócio
-        //
-        // 1. Usar authenticationManager.authenticate(
-        //        new UsernamePasswordAuthenticationToken(email, password)
-        //    )
-        //    - Se falhar, AuthenticationException será tratada pelo handler de exceções
-        //
-        // 2. Obter o User autenticado do SecurityContext:
-        //    - Authentication auth = SecurityContextHolder.getContext().getAuthentication()
-        //    - User user = (User) auth.getPrincipal()
-        //
-        // 3. Verificar se o usuário está ativo (user.getActive()):
-        //    - Se false, lançar BusinessException("E-mail não verificado. Verifique sua caixa de entrada.")
-        //
-        // 4. Gerar token JWT com base no user:
-        //    - String token = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().name())
-        //
-        // 5. Retornar new AuthResponse(token, userMapper.toUserResponse(user))
-
-        return null;
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = (User) auth.getPrincipal();
+        if (user.getActive()==false){
+            throw new BusinessException("E-mail não verificado. Verifique sua caixa de entrada.");
+        }
+        String token = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().name());
+        //cria metodo para verificar email ,mandando codigo no email, se verificado mudar estado para active true
+        return new AuthResponse(token, userMapper.toUserResponse(user)) ;
     }
 
     @Override
     public void forgotPassword(ForgotPasswordRequest request) {
-        // TODO: PASSO A PASSO - Lógica de Negócio
-        //
+
         // 1. Buscar usuário pelo e-mail (userRepository.findByEmail)
         //    - Se não encontrar, OPTIONAL: não revelar se o e-mail existe por segurança
         //      (retornar silenciosamente sem erro)
@@ -173,25 +163,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserResponse onboarding(OnboardingRequest request, String userEmail) {
-        // TODO: PASSO A PASSO - Lógica de Negócio
-        //
-        // 1. Buscar usuário pelo e-mail (userRepository.findByEmail)
-        //    - Se não encontrar, lançar ResourceNotFoundException
-        //
-        // 2. Validar dados do onboarding (opcional mas recomendado):
-        //    - displayName: não vazio, entre 3-30 caracteres
-        //    - Se inválido, lançar BusinessException("Display name inválido")
-        //
-        // 3. Atualizar dados do usuário:
-        //    - user.setDisplayName(request.displayName())
-        //    - user.setAvatarUrl(request.avatarUrl())  // pode ser null/vazio
-        //    - user.setUpdatedAt(LocalDateTime.now())
-        //
-        // 4. Salvar (userRepository.save)
-        //
-        // 5. Retornar userMapper.toUserResponse(user)
+        // 1. Busca o usuário que já está logado (identificado pelo e-mail do Token)
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        User user = userRepository.findByEmail(userEmail).orElse(null);
+        // 2. Validação simples de nome
+        if (request.displayName() == null || request.displayName().length() < 3) {
+            throw new BusinessException("O nome de exibição deve ter pelo menos 3 caracteres.");
+        }
+
+        // 3. "Dando vida" ao perfil
+        user.setDisplayName(request.displayName());
+        user.setAvatarUrl(request.avatarUrl());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        // 4. Salva as mudanças
+        userRepository.save(user);
+
+        // 5. Converte para o DTO de resposta que o Frontend Next.js entende
         return userMapper.toUserResponse(user);
     }
 }

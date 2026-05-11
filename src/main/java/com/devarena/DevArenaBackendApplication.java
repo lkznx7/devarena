@@ -2,11 +2,13 @@ package com.devarena;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
-public class DevArenaApplication {
+@EnableAsync
+public class DevArenaBackendApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DevArenaApplication.class, args);
+        SpringApplication.run(DevArenaBackendApplication.class, args);
     }
 }
