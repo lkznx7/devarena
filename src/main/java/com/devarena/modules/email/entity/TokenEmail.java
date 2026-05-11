@@ -20,8 +20,9 @@ public class TokenEmail {
     public TokenEmail() {
 
     }
-    public TokenEmail(String token,String email) {
-
+    public TokenEmail(String token, String email) {
+        this.token = token;
+        this.email = email;
     }
     public TokenEmail(String token, LocalTime createdAt, LocalTime expireAt) {
         this.token = token;

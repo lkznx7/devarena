@@ -78,7 +78,9 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponse login(String email, String password) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        User user = (User) auth.getPrincipal();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
         if (user.getActive() == false) {
             throw new BusinessException("E-mail não verificado. Verifique sua caixa de entrada.");
