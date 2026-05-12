@@ -1,14 +1,13 @@
 package com.devarena.modules.auth.service;
 
-import com.devarena.modules.auth.dto.request.ForgotPasswordRequest;
-import com.devarena.modules.auth.dto.request.OnboardingRequest;
-import com.devarena.modules.auth.dto.request.RegisterRequest;
-import com.devarena.modules.auth.dto.request.ResetPasswordRequest;
+import com.devarena.modules.auth.dto.request.*;
 import com.devarena.modules.auth.dto.response.AuthResponse;
 import com.devarena.modules.auth.dto.response.UserResponse;
+import com.devarena.modules.auth.entity.RefreshToken;
 import com.devarena.modules.auth.entity.User;
 import com.devarena.modules.auth.enums.Roles;
 import com.devarena.modules.auth.mapper.UserMapper;
+import com.devarena.modules.auth.repository.RefreshTokenRepository;
 import com.devarena.modules.auth.repository.UserRepository;
 import com.devarena.modules.email.service.TokenEmailService;
 import com.devarena.security.jwt.JwtTokenProvider;
@@ -20,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -28,6 +28,7 @@ import java.util.Optional;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
@@ -36,12 +37,14 @@ public class AuthServiceImpl implements AuthService {
 
     public AuthServiceImpl(
             UserRepository userRepository,
+            RefreshTokenRepository refreshTokenRepository,
             UserMapper userMapper,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
             JwtTokenProvider jwtTokenProvider,
             TokenEmailService tokenEmailService) {
         this.userRepository = userRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
@@ -71,23 +74,62 @@ public class AuthServiceImpl implements AuthService {
 
         tokenEmailService.CriarToken(user);
 
-        return new AuthResponse(null, userMapper.toUserResponse(user));
+        return new AuthResponse(null, null, userMapper.toUserResponse(user));
     }
 
     @Override
+    @Transactional
     public AuthResponse login(String email, String password) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        if (user.getActive() == false) {
+        if (user.getIsActive() == null || !user.getIsActive()) {
             throw new BusinessException("E-mail não verificado. Verifique sua caixa de entrada.");
         }
 
-        String token = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().name());
-        return new AuthResponse(token, userMapper.toUserResponse(user));
+        String accessToken = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().name());
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getEmail(), user.getRole().name());
+
+        // Salvar Refresh Token
+        refreshTokenRepository.deleteByUser(user); // Garante apenas um token por usuário
+        RefreshToken rt = new RefreshToken();
+        rt.setUser(user);
+        rt.setToken(refreshToken);
+        rt.setIsRevoked(false);
+        refreshTokenRepository.save(rt);
+
+        return new AuthResponse(accessToken, refreshToken, userMapper.toUserResponse(user));
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refreshToken(TokenRefreshRequest request) {
+        String refreshToken = request.refreshToken();
+
+        RefreshToken rt = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new BusinessException("Refresh token inválido ou não encontrado."));
+
+        if (rt.getIsRevoked()) {
+            throw new BusinessException("Este token foi revogado.");
+        }
+
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            refreshTokenRepository.delete(rt);
+            throw new BusinessException("Refresh token expirado.");
+        }
+
+        User user = rt.getUser();
+        String newAccessToken = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().name());
+
+        return new AuthResponse(newAccessToken, refreshToken, userMapper.toUserResponse(user));
+    }
+
+    @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        refreshTokenRepository.deleteByToken(refreshToken);
     }
 
     @Override
@@ -126,11 +168,11 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        if (user.getActive() == true) {
+        if (user.getIsActive() != null && user.getIsActive()) {
             return;
         }
 
-        user.setActive(true);
+        user.setIsActive(true);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
 

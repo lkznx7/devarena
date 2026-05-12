@@ -22,6 +22,9 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration}")
     private Long expiration;
 
+    @Value("${jwt.refresh-expiration:604800000}")
+    private Long refreshExpiration;
+
     public String generateToken(Authentication authentication) {
         UserDetails user = (UserDetails) authentication.getPrincipal();
         String role = user.getAuthorities().stream()
@@ -33,6 +36,10 @@ public class JwtTokenProvider {
 
     public String generateToken(String email, String role) {
         return buildToken(email, role, expiration);
+    }
+
+    public String generateRefreshToken(String email, String role) {
+        return buildToken(email, role, refreshExpiration);
     }
 
     private String buildToken(String subject, String role, Long expirationTime) {

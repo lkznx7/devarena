@@ -13,7 +13,6 @@ import com.devarena.modules.user.entity.Follow;
 import com.devarena.modules.user.entity.UserStats;
 import com.devarena.modules.user.entity.XpTransaction;
 import jakarta.persistence.*;
-import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,10 +22,6 @@ import java.util.*;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class User implements UserDetails {
 
     @Id
@@ -95,15 +90,42 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private List<UserChallengeProgress> challengeProgress;
 
-    // metodos userdetails
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (this.role == null) {
-            return Collections.emptySet();
-        }
-        return Set.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+    public User() {
     }
 
+    public User(UUID id, String email, String password, String displayName, String avatarUrl, String bio, Integer xp, Integer level, String plan, Roles role, Boolean isActive, LocalDateTime createdAt, LocalDateTime updatedAt, List<RefreshToken> refreshTokens, List<OAuthAccount> oauthAccounts, List<Notification> notifications, List<UserMission> userMissions, List<Ranking> rankings, List<Follow> following, List<Follow> followers, List<XpTransaction> xpTransactions, UserStats userStats, List<Submission> submissions, List<PvpMatch> pvpMatchesAsPlayer1, List<PvpMatch> pvpMatchesAsPlayer2, List<PvpMatch> wonMatches, List<PvpQueue> pvpQueues, List<UserBadge> userBadges, List<UserChallengeProgress> challengeProgress) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.displayName = displayName;
+        this.avatarUrl = avatarUrl;
+        this.bio = bio;
+        this.xp = xp;
+        this.level = level;
+        this.plan = plan;
+        this.role = role;
+        this.isActive = isActive;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.refreshTokens = refreshTokens;
+        this.oauthAccounts = oauthAccounts;
+        this.notifications = notifications;
+        this.userMissions = userMissions;
+        this.rankings = rankings;
+        this.following = following;
+        this.followers = followers;
+        this.xpTransactions = xpTransactions;
+        this.userStats = userStats;
+        this.submissions = submissions;
+        this.pvpMatchesAsPlayer1 = pvpMatchesAsPlayer1;
+        this.pvpMatchesAsPlayer2 = pvpMatchesAsPlayer2;
+        this.wonMatches = wonMatches;
+        this.pvpQueues = pvpQueues;
+        this.userBadges = userBadges;
+        this.challengeProgress = challengeProgress;
+    }
+
+    // Getters and Setters
     public UUID getId() {
         return id;
     }
@@ -184,12 +206,12 @@ public class User implements UserDetails {
         this.role = role;
     }
 
-    public Boolean getActive() {
+    public Boolean getIsActive() {
         return isActive;
     }
 
-    public void setActive(Boolean active) {
-        isActive = active;
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -336,8 +358,55 @@ public class User implements UserDetails {
         this.challengeProgress = challengeProgress;
     }
 
+    // UserDetails methods
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (this.role == null) {
+            return Collections.emptySet();
+        }
+        return Set.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+    }
+
     @Override
     public String getUsername() {
         return email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return isActive != null && isActive;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", avatarUrl='" + avatarUrl + '\'' +
+                ", bio='" + bio + '\'' +
+                ", xp=" + xp +
+                ", level=" + level +
+                ", plan='" + plan + '\'' +
+                ", role=" + role +
+                ", isActive=" + isActive +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 }

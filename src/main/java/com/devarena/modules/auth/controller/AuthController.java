@@ -22,47 +22,61 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new ApiResponse(true, "Usuário registrado com sucesso. Verifique seu e-mail.", response));
+                .body(ApiResponse.ok("Usuário registrado com sucesso. Verifique seu e-mail.", response));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request.email(), request.password());
         return ResponseEntity
-                .ok(new ApiResponse(true, "Login realizado com sucesso.", response));
+                .ok(ApiResponse.ok("Login realizado com sucesso.", response));
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<ApiResponse> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         authService.forgotPassword(request);
         return ResponseEntity
-                .ok(new ApiResponse(true, "Se o e-mail estiver cadastrado, instruções de recuperação foram enviadas.", null));
+                .ok(ApiResponse.ok("Se o e-mail estiver cadastrado, instruções de recuperação foram enviadas.", null));
     }
 
     @PatchMapping("/reset-password")
-    public ResponseEntity<ApiResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request);
         return ResponseEntity
-                .ok(new ApiResponse(true, "Senha redefinida com sucesso.", null));
+                .ok(ApiResponse.ok("Senha redefinida com sucesso.", null));
     }
 
     @GetMapping("/verify-email")
-    public ResponseEntity<ApiResponse> verifyEmail(@RequestParam String token, @RequestParam String email) {
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam String token, @RequestParam String email) {
         authService.verifyEmail(token, email);
         return ResponseEntity
-                .ok(new ApiResponse(true, "E-mail verificado com sucesso.", null));
+                .ok(ApiResponse.ok("E-mail verificado com sucesso.", null));
     }
 
     @PostMapping("/onboarding")
-    public ResponseEntity<ApiResponse> onboarding(@RequestBody OnboardingRequest request) {
+    public ResponseEntity<ApiResponse<UserResponse>> onboarding(@RequestBody OnboardingRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String userEmail = auth.getName();
         UserResponse response = authService.onboarding(request, userEmail);
         return ResponseEntity
-                .ok(new ApiResponse(true, "Onboarding concluído.", response));
+                .ok(ApiResponse.ok("Onboarding concluído.", response));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@RequestBody TokenRefreshRequest request) {
+        AuthResponse response = authService.refreshToken(request);
+        return ResponseEntity
+                .ok(ApiResponse.ok("Token renovado com sucesso.", response));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@RequestBody TokenRefreshRequest request) {
+        authService.logout(request.refreshToken());
+        return ResponseEntity
+                .ok(ApiResponse.ok("Logout realizado com sucesso.", null));
     }
 }

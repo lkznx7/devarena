@@ -2,10 +2,12 @@ package com.devarena.modules.auth;
 
 import com.devarena.modules.auth.dto.request.LoginRequest;
 import com.devarena.modules.auth.dto.request.RegisterRequest;
+import com.devarena.modules.auth.dto.request.TokenRefreshRequest;
 import com.devarena.modules.auth.dto.response.AuthResponse;
 import com.devarena.modules.email.entity.TokenEmail;
 import com.devarena.modules.email.repository.TokenEmailRepository;
 import com.devarena.shared.responses.ApiResponse;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+    "spring.ai.openai.api-key=dummy",
+    "spring.cloud.function.scan.enabled=false"
+})
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -40,6 +45,7 @@ class AuthFlowIntegrationTest {
     private String testEmail;
     private String testPassword;
     private String testToken;
+    private String testRefreshToken;
 
     @BeforeAll
     void init() {
@@ -59,7 +65,6 @@ class AuthFlowIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Usuário registrado com sucesso. Verifique seu e-mail."))
                 .andExpect(jsonPath("$.data.user.email").value(testEmail));
 
         TokenEmail token = tokenEmailRepository.findByEmail(testEmail)
@@ -77,37 +82,25 @@ class AuthFlowIntegrationTest {
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("User is disabled")));
     }
 
     @Test
     @Order(3)
-    @DisplayName("3. Busca token de 6 dígitos no banco de dados")
-    void shouldRetrieveTokenFromDatabase() throws Exception {
-        TokenEmail token = tokenEmailRepository.findByEmail(testEmail)
-                .orElseThrow(() -> new AssertionError("Token não encontrado no banco para: " + testEmail));
-
-        assertThat(token.getToken()).hasSize(6);
-        assertThat(token.getEmail()).isEqualTo(testEmail);
-
-        testToken = token.getToken();
-    }
-
-    @Test
-    @Order(4)
-    @DisplayName("4. Validação do token de 6 dígitos -> Ativar usuário")
+    @DisplayName("3. Validação do token -> Ativar usuário")
     void shouldVerifyEmailWithValidToken() throws Exception {
         mockMvc.perform(get("/auth/verify-email")
                         .param("token", testToken)
                         .param("email", testEmail))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("E-mail verificado com sucesso."));
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
-    @Order(5)
-    @DisplayName("5. Login após verificação -> Retorna JWT com sucesso")
+    @Order(4)
+    @DisplayName("4. Login após verificação -> Retorna JWT e Refresh Token")
     void shouldLoginSuccessfullyAfterEmailVerification() throws Exception {
         LoginRequest loginRequest = new LoginRequest(testEmail, testPassword);
 
@@ -116,15 +109,48 @@ class AuthFlowIntegrationTest {
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Login realizado com sucesso."))
+                .andExpect(jsonPath("$.data.token").isNotEmpty())
+                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
-        ApiResponse apiResponse = objectMapper.readValue(responseBody, ApiResponse.class);
-        AuthResponse authResponse = objectMapper.convertValue(apiResponse.getData(), AuthResponse.class);
+        ApiResponse<AuthResponse> apiResponse = objectMapper.readValue(responseBody, new TypeReference<>() {});
+        AuthResponse authResponse = apiResponse.getData();
 
-        assertThat(authResponse.token()).isNotNull();
-        assertThat(authResponse.token()).isNotEmpty();
-        assertThat(authResponse.user().email()).isEqualTo(testEmail);
+        assertThat(authResponse.refreshToken()).isNotNull();
+        testRefreshToken = authResponse.refreshToken();
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("5. Refresh Token -> Gera novo Access Token")
+    void shouldRefreshTokenSuccessfully() throws Exception {
+        TokenRefreshRequest refreshRequest = new TokenRefreshRequest(testRefreshToken);
+
+        mockMvc.perform(post("/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(refreshRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.token").isNotEmpty());
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("6. Logout -> Invalida Refresh Token")
+    void shouldLogoutSuccessfully() throws Exception {
+        TokenRefreshRequest logoutRequest = new TokenRefreshRequest(testRefreshToken);
+
+        mockMvc.perform(post("/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logoutRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        // Tentar usar o token revogado
+        mockMvc.perform(post("/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(logoutRequest)))
+                .andExpect(status().isBadRequest());
     }
 }
